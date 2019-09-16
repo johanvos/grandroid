@@ -38,3 +38,9 @@ $GRAAL/bin/native-image \
   
   As a result, tmphw contains a file hello.helloworld.o which is the one that is here placed in the binariesfornow directory
   
+  Create a keystore:
+  ```
+  /opt/java/bin/keytool -genkey -alias server-alias -keyalg RSA -keypass foofoo -storepass barbar -keystore ~/android.keystore.jks
+```
+
+When asked for password, enter `barbar`
