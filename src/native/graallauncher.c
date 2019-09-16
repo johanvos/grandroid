@@ -23,6 +23,7 @@ static int pfd[2];
 static pthread_t thr;
 static const char *tag = "myapp";
 
+// we need this and the start_logger since android eats fprintf
 static void *thread_func()
 {
     ssize_t rdsz;
@@ -67,8 +68,8 @@ JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_startGraalApp
 
 JNIEXPORT jlong JNICALL Java_com_gluonhq_helloandroid_MainActivity_surfaceReady
 (JNIEnv *env, jobject activity, jobject surface, jfloat mydensity) {
+    window = ANativeWindow_fromSurface(env, surface);
     LOGE(stderr, "SurfaceReady, native window at %p\n", window);
-    window   = ANativeWindow_fromSurface(env, surface);
     density = mydensity;
     return (jlong)window;
 }
