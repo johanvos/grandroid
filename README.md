@@ -5,7 +5,7 @@ Hacking.
 
 MainActivity is a java class running on the Dalvik/ART/Android platform. Hence, it needs to be compiled with the appropriate compiler (sic)
 
-It calls into graallauncher.c which will launch the graal-compiled java app.
+It calls into graallauncher.c which will launch the graal-compiled java app. This is the one that matters (not the Android activity)
 
 The pre-compiled app is included in binariesfornow: hello.helloworld.o
 
@@ -35,4 +35,6 @@ $GRAAL/bin/native-image \
 	-cp $CP \
 	hello.HelloWorld
   ```
+  
+  As a result, tmphw contains a file hello.helloworld.o which is the one that is here placed in the binariesfornow directory
   
