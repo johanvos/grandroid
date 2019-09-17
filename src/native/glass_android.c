@@ -26,7 +26,7 @@ JNIEXPORT void  JNICALL Java_com_sun_glass_ui_monocle_EGL_testGraal
 
 JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL_eglGetDisplay
     (JNIEnv *env, jclass clazz, jlong display) {
-    LOGE(stderr, "[GLASS] getDisplay, dislay = %ld or %p\n", display, (void *)display);
+    LOGE(stderr, "[GLASS] getDisplay, dislay = %ld or %p, env at %p\n", display, (void *)display, env);
     EGLDisplay eglDisplay = eglGetDisplay(((EGLNativeDisplayType) (unsigned long)(display)));
     LOGE(stderr, "[GLASS] getDisplay, got dislay = %ld or %p\n", (long)eglDisplay, eglDisplay);
     return (jlong)(eglDisplay);
@@ -36,7 +36,7 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglInitialize
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jintArray majorArray,
      jintArray minorArray){
     EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
-    LOGE(stderr, "[GLASS] eglInitialize, egldislay = %ld or %p\n", eglDisplayPtr, eglDisplay);
+    LOGE(stderr, "[GLASS] eglInitialize, egldislay = %ld or %p, env at %p\n", eglDisplayPtr, eglDisplay, env);
 
     EGLint major, minor;
     if (eglInitialize(eglDisplay, &major, &minor)) {
@@ -51,7 +51,7 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglInitialize
 
 JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI
     (JNIEnv *env, jclass clazz, jint api) {
-    LOGE(stderr, "[GLASS] bindApi\n");
+    LOGE(stderr, "[GLASS] bindApi, env at %p\n", env);
 
     if (eglBindAPI(api)) {
         return JNI_TRUE;
@@ -105,7 +105,8 @@ return index;
 JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglChooseConfig
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jintArray attribs,
      jlongArray configs, jint configSize, jintArray numConfigs) {
-EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
+    LOGE(stderr, "[GLASS] eglChooseConfig, env at %p\n", env);
+    EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
     int i=0;
 
     int eglAttrs[50]; // value, attr pair plus a None
@@ -145,7 +146,7 @@ JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL__1eglCreateWindowSurfa
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
      jlong nativeWindow, jintArray attribs) {
 
-fprintf(stderr, "[JNIEGL] createWindowSurface\n");
+    fprintf(stderr, "[JNIEGL] createWindowSurface, env at %p\n", env);
 EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
 EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
     EGLSurface eglSurface;
@@ -158,41 +159,31 @@ EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
     eglSurface =  eglCreateWindowSurface(eglDisplay, eglConfig,
                                          (EGLNativeWindowType) nativeWindow,
                                          (EGLint *) NULL);
-// mysurface = eglSurface;
     if (attrArray != NULL) {
         (*env)->ReleaseIntArrayElements(env, attribs, attrArray, JNI_ABORT);
     }
-fprintf(stderr, "EGL Surface at %p\n", eglSurface);
-fprintf(stderr, "GLERR?  %d\n",eglGetError());
-/*
-fprintf(stderr, "while we're here, lets create eglContext\n");
-fprintf(stderr, "size of EGLDisplay = %ul\n",sizeof(EGLDisplay));
-jlong eglContext = Java_com_sun_glass_ui_monocle_EGL_eglCreateContext (env, 0, eglDisplayPtr, eglConfigPtr, 0, 0);
-fprintf(stderr, "while we're here, we created eglContext\n");
-*/
+    LOGE(stderr, "EGL Surface at %p\n", eglSurface);
+    LOGE(stderr, "GLERR?  %d\n",eglGetError());
     return asJLong(eglSurface);
 }
+
 JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL_eglCreateContext
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
       jlong shareContext, jintArray attribs){
 
-EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
-EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
+    LOGE(stderr, "eglMakeCurrent with env %p\n", env);
+    EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
+    EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
 
-fprintf(stderr, "EGLcretecontext, egldisplay at %p with val %ld\n", eglDisplay, eglDisplayPtr);
-fprintf(stderr, "EGLcretecontext, config at %p with val %ld\n", eglConfig, eglConfigPtr);
+    LOGE(stderr, "EGLcretecontext, egldisplay at %p with val %ld\n", eglDisplay, eglDisplayPtr);
+    LOGE(stderr, "EGLcretecontext, config at %p with val %ld\n", eglConfig, eglConfigPtr);
     // we don't support any passed-in context attributes presently
     // we don't support any share context presently
     EGLint contextAttrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
     EGLContext context = eglCreateContext(eglDisplay, eglConfig,
                                           NULL, contextAttrs);
-fprintf(stderr, "EGL Context at %p\n", context);
-fprintf(stderr, "GLERR?  %d\n",eglGetError());
-
-// fprintf(stderr, "And now also make current!! surface = %p\n",mysurface);
- // EGLBoolean makec = eglMakeCurrent(eglDisplay, mysurface, mysurface, context);
- // EGLBoolean makec = noJava_com_sun_glass_ui_monocle_EGL_eglMakeCurrent(env, 0, eglDisplayPtr, (long)mysurface, (long)mysurface, (jlong)context);
-// fprintf(stderr, "And now also made current!! answer = %d\n",makec);
+    LOGE(stderr, "eglContext created at %p\n", context);
+    LOGE(stderr, "GLERR?  %d\n",eglGetError());
 
     return asJLong(context);
 }
@@ -200,18 +191,21 @@ fprintf(stderr, "GLERR?  %d\n",eglGetError());
 JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent
    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong drawSurfacePtr,
     jlong readSurfacePtr, jlong eglContextPtr) {
-EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
-EGLSurface eglDrawSurface = (EGLSurface)drawSurfacePtr;
-EGLSurface eglReadSurface = (EGLSurface)readSurfacePtr;
-EGLContext eglContext = (EGLSurface)eglContextPtr;
-fprintf(stderr, "EGL MakeCurrent! disp = %p, surface = %p, readS = %p, context = %p\n", eglDisplay, eglDrawSurface, eglReadSurface, eglContext);
-fprintf(stderr, "GLERR?  %d\n",eglGetError());
+    LOGE(stderr, "eglMakeCurrent with env %p\n", env);
+    EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
+    EGLSurface eglDrawSurface = (EGLSurface)drawSurfacePtr;
+    EGLSurface eglReadSurface = (EGLSurface)readSurfacePtr;
+    EGLContext eglContext = (EGLSurface)eglContextPtr;
+    LOGE(stderr, "EGL MakeCurrent! disp = %p, surface = %p, readS = %p, context = %p\n", eglDisplay, eglDrawSurface, eglReadSurface, eglContext);
+    LOGE(stderr, "GLERR?  %d\n",eglGetError());
 
 
     if (eglMakeCurrent(eglDisplay, eglDrawSurface, eglReadSurface,
                    eglContext)) {
+        LOGE(stderr, "eglMakeCurrent succeeded\n");
         return JNI_TRUE;
     } else {
+        LOGE(stderr, "eglMakeCurrent failed\n");
         return JNI_FALSE;
     }
 }
