@@ -4,8 +4,13 @@
 #include <stdlib.h>
 
 #include <EGL/egl.h>
+#include "glass.h"
+
+// comment this out to see it work (at least the first invocation of eglMakeCurrent
+// #define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
+EGLSurface myEglSurface;
 
 #define asJLong(x) (jlong)x
 
@@ -162,8 +167,12 @@ EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
     if (attrArray != NULL) {
         (*env)->ReleaseIntArrayElements(env, attribs, attrArray, JNI_ABORT);
     }
-    LOGE(stderr, "EGL Surface at %p\n", eglSurface);
-    LOGE(stderr, "GLERR?  %d\n",eglGetError());
+    LOGE(stderr, "EGL Surface create at %p, errorcode is %d \n", eglSurface, eglGetError());
+    myEglSurface = eglSurface;
+#ifdef ALL_NATIVE
+    LOGE(stderr, "BYPASS MODUS! eglCreateSurface done, now go to eglCreateContext");
+Java_com_sun_glass_ui_monocle_EGL_eglCreateContext(env, clazz, eglDisplayPtr, eglConfigPtr, 0, 0);
+#endif
     return asJLong(eglSurface);
 }
 
@@ -171,7 +180,7 @@ JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL_eglCreateContext
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
       jlong shareContext, jintArray attribs){
 
-    LOGE(stderr, "eglMakeCurrent with env %p\n", env);
+    LOGE(stderr, "eglCreateContext with env %p\n", env);
     EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
     EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
 
@@ -185,6 +194,10 @@ JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL_eglCreateContext
     LOGE(stderr, "eglContext created at %p\n", context);
     LOGE(stderr, "GLERR?  %d\n",eglGetError());
 
+#ifdef ALL_NATIVE
+    LOGE(stderr, "BYPASS MODUS! eglCreateContext done, now go to eglMakeCurrent");
+Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent(env, clazz, eglDisplayPtr, asJLong(myEglSurface), asJLong(myEglSurface), asJLong(context));
+#endif
     return asJLong(context);
 }
 
@@ -202,7 +215,7 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent
 
     if (eglMakeCurrent(eglDisplay, eglDrawSurface, eglReadSurface,
                    eglContext)) {
-        LOGE(stderr, "eglMakeCurrent succeeded\n");
+        LOGE(stderr, "EGLMAKECURRENT SUCCEEDED\n");
         return JNI_TRUE;
     } else {
         LOGE(stderr, "eglMakeCurrent failed\n");
