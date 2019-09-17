@@ -53,51 +53,17 @@ System.err.println("Hello WORLD ACTIVITY, onCreate called");
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.v(TAG, "[MainActivity] Surface created in activity.");
-System.err.println("loading lib");
-System.loadLibrary("mygraal");
-System.err.println("loaded lib");
-DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        float density = metrics.density;
-System.err.println("metrics = "+metrics);
-System.err.println("DENSITY??? "+density);
-
-        nativeWindowPtr = surfaceReady(holder.getSurface(), density);
-        System.err.println("Surface created, native code informed about it.");
-        Log.v(TAG, "Surface created, native code informed about it.");
-    }
-
-    private native void startGraalApp();
-    // private native void testGL();
-    private native long surfaceReady(Surface surface, float density);
-
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width,
-                    int height) {
-Log.v(TAG, "[MainActivity] surfaceChange, format = "+format+", width = "+width+", height = "+height);
-System.err.println("[MainActivity] surfaceChange, format = "+format+", width = "+width+", height = "+height);
-DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        float density = metrics.density;
-System.err.println("metrics = "+metrics);
-System.err.println("DENSITY??? "+density);
-            // _surfaceChanged(holder.getSurface(), format, width, height);
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-System.err.println("[MainActivity] surfaceDestroyed");
-            // _surfaceChanged(null);
-    }
-
-    @Override
-    public void surfaceRedrawNeeded(SurfaceHolder holder) {
-        System.err.println("[MainActivity] surfaceRedrawNeeded, we will launch our app now");
+        Log.v(TAG, "[MainGraalActivity] Surface created in activity.");
+        Log.v(TAG, "loading Graallib");
+        System.loadLibrary("mygraal");
+        Log.v(TAG, "loaded Graallib");
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         float density = metrics.density;
+        Log.v(TAG, "metrics = "+metrics+", density = "+density);
+        nativeWindowPtr = surfaceReady(holder.getSurface(), density);
+        Log.v(TAG, "Surface created, native code informed about it, nativeWindow at "+nativeWindowPtr);
+        Log.v(TAG, "We will now launch Graal in a separate thread");
         Thread t = new Thread() {
             @Override public void run() {
                 try {
@@ -108,6 +74,37 @@ System.err.println("[MainActivity] surfaceDestroyed");
             }
         };
         t.start();
+    }
+
+    private native void startGraalApp();
+    // private native void testGL();
+    private native long surfaceReady(Surface surface, float density);
+
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width,
+                    int height) {
+    Log.v(TAG, "[MainActivity] surfaceChange, format = "+format+", width = "+width+", height = "+height);
+System.err.println("[MainActivity] surfaceChange, format = "+format+", width = "+width+", height = "+height);
+DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        float density = metrics.density;
+System.err.println("surfaceChanged, metrics = "+metrics+", density = "+density);
+            // _surfaceChanged(holder.getSurface(), format, width, height);
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+System.err.println("[MainGraalActivity] surfaceDestroyed");
+            // _surfaceChanged(null);
+    }
+
+    @Override
+    public void surfaceRedrawNeeded(SurfaceHolder holder) {
+        System.err.println("[MainGraalActivity] surfaceRedrawNeeded. For now, we ignore this");
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        float density = metrics.density;
     }
 
     class InternalSurfaceView extends SurfaceView {
