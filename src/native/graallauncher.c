@@ -7,7 +7,7 @@
 
 #include <errno.h>
 #include <android/native_window_jni.h>
-#include <android/log.h>
+#include "grandroid.h"
 
 #define  LOG_TAG "GraalGluon"
 
@@ -19,9 +19,57 @@ extern void *IsolateEnterStub__JavaMainWrapper__run__5087f5482cc9a6abc971913ece4
 ANativeWindow *window;
 jfloat density;
 
+int start_logger(const char *app_name);
 static int pfd[2];
 static pthread_t thr;
 static const char *tag = "myapp";
+
+// === called from DALVIK. Minize work/dependencies here === // 
+
+JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_startGraalApp
+(JNIEnv *env, jobject activity) {
+    LOGE(stderr, "Start GraalApp!\n");
+    start_logger("GraalCompiled");
+    (*IsolateEnterStub__JavaMainWrapper__run__5087f5482cc9a6abc971913ece43acb471d2631b__a61fe6c26e84dd4037e4629852b5488bfcc16e7e)(1);
+}
+
+JNIEXPORT jlong JNICALL Java_com_gluonhq_helloandroid_MainActivity_surfaceReady
+(JNIEnv *env, jobject activity, jobject surface, jfloat mydensity) {
+    window = ANativeWindow_fromSurface(env, surface);
+    LOGE(stderr, "SurfaceReady, native window at %p\n", window);
+    density = mydensity;
+    return (jlong)window;
+}
+
+// == expose window functionality to JavaFX native code == //
+
+ANativeWindow* getNativeWindow() {
+    return window;
+}
+
+// ===== loading native JavaFX libs ===== //
+
+JNIEXPORT jint JNICALL JNI_OnLoad_prism_es2_monocle(JavaVM *vm, void *reserved) {
+    LOGE(stderr, "Loading asked for prism_es2_monocle\n");
+    return JNI_VERSION_1_8;
+}
+
+JNIEXPORT jint JNICALL JNI_OnLoad_glass_monocle(JavaVM *vm, void *reserved) {
+    LOGE(stderr, "Loading asked for glass_monocle\n");
+    return JNI_VERSION_1_8;
+}
+
+
+// ======== missing functions ==== //
+
+int * __errno_location(void) {
+    int *a = &errno;
+    return a;
+}
+
+void getEnviron() {
+    LOGE(stderr, "\n\ngetEnviron NYI\n\n");
+}
 
 // we need this and the start_logger since android eats fprintf
 static void *thread_func()
@@ -57,26 +105,4 @@ int start_logger(const char *app_name)
     return 0;
 }
 
-
-
-JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_startGraalApp
-(JNIEnv *env, jobject activity) {
-    LOGE(stderr, "Start GraalApp!\n");
-    start_logger("GraalCompiled");
-    (*IsolateEnterStub__JavaMainWrapper__run__5087f5482cc9a6abc971913ece43acb471d2631b__a61fe6c26e84dd4037e4629852b5488bfcc16e7e)(1);
-}
-
-JNIEXPORT jlong JNICALL Java_com_gluonhq_helloandroid_MainActivity_surfaceReady
-(JNIEnv *env, jobject activity, jobject surface, jfloat mydensity) {
-    window = ANativeWindow_fromSurface(env, surface);
-    LOGE(stderr, "SurfaceReady, native window at %p\n", window);
-    density = mydensity;
-    return (jlong)window;
-}
-
-
-int * __errno_location(void) {
-    int *a = &errno;
-    return a;
-}
 
