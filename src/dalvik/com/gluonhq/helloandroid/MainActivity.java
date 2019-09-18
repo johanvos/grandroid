@@ -116,4 +116,42 @@ System.err.println("[MainGraalActivity] surfaceDestroyed");
 
     }
 
+    @Override
+    protected void onDestroy() {
+        Log.v(TAG, "onDestroy");
+        super.onDestroy();
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
+    @Override
+    protected void onPause() {
+        Log.v(TAG, "onPause");
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.v(TAG, "onResume");
+        super.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        Log.v(TAG, "onStart");
+        super.onStart();
+    }
+
+    @Override
+    protected void onRestart() {
+        Log.v(TAG, "onRestart");
+        super.onRestart();
+    }
+
+    @Override
+    protected void onStop() {
+        Log.v(TAG, "onStop");
+        super.onStop();
+    }
+
+
 }
