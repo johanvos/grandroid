@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
-export OLDJAVA=/opt/jdk1.8.0_162
+export OLDJAVA=/opt/jdk1.8.0_131
 export SDK="/opt/android-sdk"
 export NDK="/opt/android-ndk"
+export JAVAFX="/home/johan/open-jfx/github/fork/openjdk-jfx/build/android-sdk/lib"
 export BUILDT=$SDK/build-tools/27.0.3
-export ndk_target=android-25
+export ndk_target=android-27
 export PROJ=`pwd`
 export platform="aarch64-linux-android21"
 export compiler="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
@@ -25,7 +26,7 @@ $compiler -target $platform -c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -
 echo "Create shared library including graal-compiled object file"
 $compiler -target $platform -fPIC -Wl,--gc-sections -o lib/arm64-v8a/libmygraal.so \
    -Lbinariesfornow -landroid -llog -lz -lstrictmath -lEGL -shared  \
-    binariesfornow/hellofx.hellofx.o graalobj/StrictMath.o graalobj/graallauncher.o graalobj/glass_android.o
+    binariesfornow/hellofx.hellofx.o graalobj/StrictMath.o graalobj/graallauncher.o graalobj/glass_android.o $JAVAFX/libglass_monocle.a $JAVAFX/libprism_es2_monocle.a
 cp binariesfornow/libstrictmath.so lib/arm64-v8a
 
 echo "Compile Dalvik Activity with old Java compiler"

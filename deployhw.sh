@@ -1,8 +1,10 @@
-export OLDJAVA=/opt/jdk1.8.0_162
+#!/bin/bash
+set -e
+export OLDJAVA=/opt/jdk1.8.0_131
 export SDK="/opt/android-sdk"
 export NDK="/opt/android-ndk"
 export BUILDT=$SDK/build-tools/27.0.3
-export ndk_target=android-25
+export ndk_target=android-27
 export PROJ=`pwd`
 export platform="aarch64-linux-android21"
 export compiler="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
@@ -17,10 +19,13 @@ mkdir -p graalobj
 
 echo "Compile helper files"
 $compiler -target $platform -c -o graalobj/StrictMath.o  src/native/StrictMath.c 
-$compiler -target $platform -c -o graalobj/graallauncher.o  src/native/graallauncher.c 
+$compiler -target $platform -c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -o graalobj/graallauncher.o  src/native/graallauncher.c 
+$compiler -target $platform -Werror -c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -o graalobj/glass_android.o  src/native/glass_android.c 
 
 echo "Create shared library including graal-compiled object file"
-$compiler -target $platform -fPIC -Wl,--gc-sections -o lib/arm64-v8a/libmygraal.so  -Lbinariesfornow -landroid -llog -lz -lstrictmath -shared  binariesfornow/hello.helloworld.o graalobj/StrictMath.o graalobj/graallauncher.o
+$compiler -target $platform -fPIC -Wl,--gc-sections -o lib/arm64-v8a/libmygraal.so  -Lbinariesfornow \
+  -landroid -llog -lz -lstrictmath -lEGL -shared  \
+  binariesfornow/hello.helloworld.o graalobj/StrictMath.o graalobj/graallauncher.o graalobj/glass_android.o
 cp binariesfornow/libstrictmath.so lib/arm64-v8a
 
 echo "Compile Dalvik Activity with old Java compiler"
@@ -35,7 +40,7 @@ $BUILDT/aapt add bin/hello.unaligned.apk lib/**/*
 $BUILDT/zipalign -f 4 bin/hello.unaligned.apk bin/hello.apk
 
 echo "Sign the apk"
-$BUILDT/apksigner sign --ks ~/mykeystore.jks bin/hello.apk
+$BUILDT/apksigner sign --ks ~/android.keystore bin/hello.apk
 
 echo "Install it on a device"
 $BUILDT/../../platform-tools/adb install -r bin/hello.apk

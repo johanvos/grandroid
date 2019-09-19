@@ -59,6 +59,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad_glass_monocle(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_8;
 }
 
+JNIEXPORT jint JNICALL JNI_OnLoad_glass_android(JavaVM *vm, void *reserved) {
+    LOGE(stderr, "Loading asked for glass_android\n");
+    return JNI_VERSION_1_8;
+}
+
 
 // ======== missing functions ==== //
 
