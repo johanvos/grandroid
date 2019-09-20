@@ -20,6 +20,8 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 
+import java.util.concurrent.*;
+
 public class MainActivity extends Activity implements SurfaceHolder.Callback,
         SurfaceHolder.Callback2 {
 
@@ -64,16 +66,26 @@ System.err.println("Hello WORLD ACTIVITY, onCreate called");
         nativeWindowPtr = surfaceReady(holder.getSurface(), density);
         Log.v(TAG, "Surface created, native code informed about it, nativeWindow at "+nativeWindowPtr);
         Log.v(TAG, "We will now launch Graal in a separate thread");
+try {
+        final CountDownLatch cl = new CountDownLatch(1);
         Thread t = new Thread() {
             @Override public void run() {
                 try {
+Log.v(TAG, "START GRAALAPP");
                     startGraalApp();
+cl.countDown();
                 } catch (Throwable t) {
                     t.printStackTrace();
                 }
             }
         };
         t.start();
+Log.v(TAG, "GRAAL THREAD STARTED");
+// cl.await(10, TimeUnit.SECONDS);
+ } catch (Throwable t) {
+ t.printStackTrace();
+ }
+Log.v(TAG, "GRAAL SURFACE created");
     }
 
     private native void startGraalApp();
@@ -84,8 +96,8 @@ System.err.println("Hello WORLD ACTIVITY, onCreate called");
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                     int height) {
-    Log.v(TAG, "[MainActivity] surfaceChange, format = "+format+", width = "+width+", height = "+height);
-System.err.println("[MainActivity] surfaceChange, format = "+format+", width = "+width+", height = "+height);
+    Log.v(TAG, "[MainActivity] AAAAAAA surfaceChange, format = "+format+", width = "+width+", height = "+height);
+System.err.println("[MainActivity] s AAAAAAAurfaceChange, format = "+format+", width = "+width+", height = "+height);
 DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         float density = metrics.density;

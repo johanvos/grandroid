@@ -85,6 +85,28 @@ JNIEXPORT jboolean JNICALL Java_hello_EGL_eglBindAPI
     (JNIEnv *env, jclass clazz, jint api) {
 return  JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI(env, clazz, api);
 }
+
+int setEGLAttrs(int *eglAttrs) {
+    int index = 0;
+    eglAttrs[index++] = EGL_SURFACE_TYPE;
+    eglAttrs[index++] = EGL_WINDOW_BIT;
+    eglAttrs[index++] = EGL_RED_SIZE;
+    eglAttrs[index++] = 8;
+    eglAttrs[index++] = EGL_GREEN_SIZE;
+    eglAttrs[index++] = 8;
+    eglAttrs[index++] = EGL_BLUE_SIZE;
+    eglAttrs[index++] = 8;
+    eglAttrs[index++] = EGL_ALPHA_SIZE;
+    eglAttrs[index++] = 8;
+    eglAttrs[index++] = EGL_DEPTH_SIZE;
+    eglAttrs[index++] = 16;
+    eglAttrs[index++] = EGL_RENDERABLE_TYPE;
+    eglAttrs[index++] = EGL_OPENGL_ES2_BIT;
+    eglAttrs[index] = EGL_NONE;
+    return index;
+}
+/*
+
 int setEGLAttrs(jint *attrs, int *eglAttrs) {
     int index = 0;
 
@@ -124,6 +146,7 @@ int setEGLAttrs(jint *attrs, int *eglAttrs) {
     eglAttrs[index] = EGL_NONE;
 return index;
 }
+*/
 
 
 
@@ -138,7 +161,7 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglChooseConfig
     jint *attrArray;
 
     attrArray = (*env)->GetIntArrayElements(env, attribs, JNI_FALSE);
-    int cnt = setEGLAttrs(attrArray, eglAttrs);
+    int cnt = setEGLAttrs(eglAttrs);
     (*env)->ReleaseIntArrayElements(env, attribs, attrArray, JNI_ABORT);
     EGLConfig *configArray = malloc(sizeof(EGLConfig) * configSize);
     jlong *longConfigArray = malloc(sizeof(long) * configSize);
@@ -252,10 +275,11 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent
         return JNI_FALSE;
     }
 }
-JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent
+
+JNIEXPORT jboolean JNICALL Java_hello_EGL_eglMakeCurrent
    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong drawSurfacePtr,
     jlong readSurfacePtr, jlong eglContextPtr) {
-    return Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent (env, clazz, eglDisplayPtr, d
+    return Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent (env, clazz, eglDisplayPtr, drawSurfacePtr, readSurfacePtr, eglContextPtr);
 }
 
 
