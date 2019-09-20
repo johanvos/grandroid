@@ -33,8 +33,16 @@ JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_startGraalApp
     (*IsolateEnterStub__JavaMainWrapper__run__5087f5482cc9a6abc971913ece43acb471d2631b__a61fe6c26e84dd4037e4629852b5488bfcc16e7e)(1);
 }
 
+JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_nativeSetSurface
+(JNIEnv *env, jobject activity, jobject surface) {
+    LOGE(stderr, "nativeSetSurface called, surface at %p\n", surface);
+    window = ANativeWindow_fromSurface(env, surface);
+    LOGE(stderr, "native setSurface Ready, native window at %p\n", window);
+}
+
 JNIEXPORT jlong JNICALL Java_com_gluonhq_helloandroid_MainActivity_surfaceReady
 (JNIEnv *env, jobject activity, jobject surface, jfloat mydensity) {
+    LOGE(stderr, "SurfaceReady, surface at %p\n", surface);
     window = ANativeWindow_fromSurface(env, surface);
     LOGE(stderr, "SurfaceReady, native window at %p\n", window);
     density = mydensity;

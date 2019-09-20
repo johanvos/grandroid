@@ -35,6 +35,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback,
    @Override
    protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
+Log.v(TAG, "oncreate start");
 System.err.println("Hello WORLD ACTIVITY, onCreate called");
             super.onCreate(savedInstanceState);
 
@@ -51,14 +52,17 @@ System.err.println("Hello WORLD ACTIVITY, onCreate called");
         mViewGroup.addView(mView);
         setContentView(mViewGroup);
         instance = this;
+Log.v(TAG, "oncreate done");
    }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+Log.v(TAG, "surfacecreated start");
         Log.v(TAG, "[MainGraalActivity] Surface created in activity.");
         Log.v(TAG, "loading Graallib");
         System.loadLibrary("mygraal");
         Log.v(TAG, "loaded Graallib");
+        nativeSetSurface(holder.getSurface());
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         float density = metrics.density;
@@ -71,6 +75,7 @@ try {
         Thread t = new Thread() {
             @Override public void run() {
                 try {
+Thread.sleep(3000);
 Log.v(TAG, "START GRAALAPP");
                     startGraalApp();
 cl.countDown();
@@ -86,23 +91,28 @@ Log.v(TAG, "GRAAL THREAD STARTED");
  t.printStackTrace();
  }
 Log.v(TAG, "GRAAL SURFACE created");
+Log.v(TAG, "surfacecreated done");
     }
 
     private native void startGraalApp();
     // private native void testGL();
     private native long surfaceReady(Surface surface, float density);
+    private native void nativeSetSurface(Surface surface);
+
 
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                     int height) {
-    Log.v(TAG, "[MainActivity] AAAAAAA surfaceChange, format = "+format+", width = "+width+", height = "+height);
-System.err.println("[MainActivity] s AAAAAAAurfaceChange, format = "+format+", width = "+width+", height = "+height);
+Log.v(TAG, "surfacechanged start");
+    Log.v(TAG, "[MainActivity] surfaceChanged, format = "+format+", width = "+width+", height = "+height);
+        nativeSetSurface(holder.getSurface());
 DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         float density = metrics.density;
 System.err.println("surfaceChanged, metrics = "+metrics+", density = "+density);
             // _surfaceChanged(holder.getSurface(), format, width, height);
+Log.v(TAG, "surfacechanged done");
     }
 
     @Override
@@ -113,10 +123,12 @@ System.err.println("[MainGraalActivity] surfaceDestroyed");
 
     @Override
     public void surfaceRedrawNeeded(SurfaceHolder holder) {
+Log.v(TAG, "surfaceredraw needed start");
         System.err.println("[MainGraalActivity] surfaceRedrawNeeded. For now, we ignore this");
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         float density = metrics.density;
+Log.v(TAG, "surfaceredraw needed done");
     }
 
     class InternalSurfaceView extends SurfaceView {
