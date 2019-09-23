@@ -76,10 +76,14 @@ try {
             @Override public void run() {
                 try {
 // Thread.sleep(3000);
-Log.v(TAG, "START GRAALAPP");
-                    // startGraalApp();
+Log.v(TAG, "really START GRAALAPP");
+                      startGraalApp();
+Log.v(TAG, "really STARTED GRAALAPP");
+// startNativeRendering(0);
 cl.countDown();
                 } catch (Throwable t) {
+Log.v(TAG, "ERROR STARTING GRAAL!");
+System.err.println("ERROR STARTING GRAAL!");
                     t.printStackTrace();
                 }
             }
@@ -93,6 +97,8 @@ Log.v(TAG, "GRAAL THREAD STARTED now");
 Log.v(TAG, "GRAAL SURFACE created");
 Log.v(TAG, "surfacecreated done");
     }
+
+    private native void startNativeRendering(long dpy);
 
     private native void startGraalApp();
     // private native void testGL();

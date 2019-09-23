@@ -7,7 +7,7 @@
 #include "glass.h"
 
 // comment this out to see it work (at least the first invocation of eglMakeCurrent
-#define ALL_NATIVE 1
+// #define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
 EGLSurface myEglSurface;
@@ -56,8 +56,13 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglInitialize
 
     EGLint major, minor;
     if (eglInitialize(eglDisplay, &major, &minor)) {
+if (majorArray!= NULL) {
+LOGE(stderr, "[GLASS] set major/minor, majorarr = %p\n", majorArray);
          (*env)->SetIntArrayRegion(env, majorArray, 0, 1, &major);
          (*env)->SetIntArrayRegion(env, minorArray, 0, 1, &minor);
+} else {
+LOGE(stderr, "[GLASS] dontset major/minor, major = NULL\n");
+}
         return JNI_TRUE;
     } else {
         LOGE(stderr, "[GLASS] major issue! eglInitialize failed!!!\n\n\n");
@@ -66,9 +71,9 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglInitialize
 }
 
 JNIEXPORT jboolean JNICALL Java_hello_EGL_eglInitialize
-    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jintArray majorArray,
-     jintArray minorArray){
-return Java_com_sun_glass_ui_monocle_EGL_eglInitialize(env, clazz, eglDisplayPtr, majorArray, minorArray);
+    // (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jintArray majorArray, jintArray minorArray){
+    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr) {
+return Java_com_sun_glass_ui_monocle_EGL_eglInitialize(env, clazz, eglDisplayPtr, NULL, NULL);
 }
 
 JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI
@@ -85,7 +90,7 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI
 JNIEXPORT jboolean JNICALL Java_hello_EGL_eglBindAPI
     (JNIEnv *env, jclass clazz, jint api) {
 jboolean answer = JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI(env, clazz, api);
-    LOGE(stderr, "eglBindApi will return %d\n", answer);
+    LOGE(stderr, "eglBindApi for %d will return %d\n", api, answer);
     return answer;
 }
 
@@ -232,6 +237,7 @@ JNIEXPORT jlong JNICALL Java_hello_EGL__1eglCreateWindowSurface
      jlong nativeWindow, jintArray attribs) {
     return Java_com_sun_glass_ui_monocle_EGL__1eglCreateWindowSurface (env, clazz, eglDisplayPtr, eglConfigPtr, nativeWindow, attribs);
 }
+
 JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL_eglCreateContext
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
       jlong shareContext, jintArray attribs){
@@ -255,6 +261,10 @@ JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL_eglCreateContext
 Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent(env, clazz, eglDisplayPtr, asJLong(myEglSurface), asJLong(myEglSurface), asJLong(context));
 #endif
     return asJLong(context);
+}
+JNIEXPORT jlong JNICALL Java_hello_EGL_eglCreateContext
+    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr) {
+    return Java_com_sun_glass_ui_monocle_EGL_eglCreateContext(env, clazz, eglDisplayPtr, eglConfigPtr, 0, NULL);
 }
 
 JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent
@@ -285,4 +295,15 @@ JNIEXPORT jboolean JNICALL Java_hello_EGL_eglMakeCurrent
     return Java_com_sun_glass_ui_monocle_EGL_eglMakeCurrent (env, clazz, eglDisplayPtr, drawSurfacePtr, readSurfacePtr, eglContextPtr);
 }
 
+ // native implementations for Dalvik code
+
+JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_startNativeRendering
+   (JNIEnv *env, jclass clazz, jlong display) {
+LOGE(stderr, "From Dalvik to Native, startNativeRendering called, display = %ld\n", display);
+    jlong eglDisplay = Java_com_sun_glass_ui_monocle_EGL_eglGetDisplay(env, clazz, display);
+LOGE(stderr, "From Dalvik to Native, got eglDisplay at %ld\n", eglDisplay);
+jboolean eglInitialized = Java_com_sun_glass_ui_monocle_EGL_eglInitialize(env, clazz, eglDisplay, NULL, NULL);
+jint api = 0;
+jboolean answer = Java_com_sun_glass_ui_monocle_EGL_eglBindAPI(env, clazz, api);
+}
 
