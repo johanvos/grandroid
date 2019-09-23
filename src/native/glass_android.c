@@ -7,10 +7,11 @@
 #include "glass.h"
 
 // comment this out to see it work (at least the first invocation of eglMakeCurrent
-// #define ALL_NATIVE 1
+#define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
 EGLSurface myEglSurface;
+EGLContext myEglContext;
 
 #define asJLong(x) (jlong)x
 
@@ -83,7 +84,9 @@ JNIEXPORT jboolean JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI
 
 JNIEXPORT jboolean JNICALL Java_hello_EGL_eglBindAPI
     (JNIEnv *env, jclass clazz, jint api) {
-return  JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI(env, clazz, api);
+jboolean answer = JNICALL Java_com_sun_glass_ui_monocle_EGL_eglBindAPI(env, clazz, api);
+    LOGE(stderr, "eglBindApi will return %d\n", answer);
+    return answer;
 }
 
 int setEGLAttrs(int *eglAttrs) {
@@ -199,7 +202,7 @@ JNIEXPORT jlong JNICALL Java_com_sun_glass_ui_monocle_EGL__1eglCreateWindowSurfa
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
      jlong nativeWindow, jintArray attribs) {
 
-    fprintf(stderr, "[JNIEGL] createWindowSurface, env at %p\n", env);
+    LOGE(stderr, "[JNIEGL] createWindowSurface, env at %p\n", env);
 EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
 EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
     EGLSurface eglSurface;

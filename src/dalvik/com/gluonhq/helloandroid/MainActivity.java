@@ -75,9 +75,9 @@ try {
         Thread t = new Thread() {
             @Override public void run() {
                 try {
-Thread.sleep(3000);
+// Thread.sleep(3000);
 Log.v(TAG, "START GRAALAPP");
-                    startGraalApp();
+                    // startGraalApp();
 cl.countDown();
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -85,7 +85,7 @@ cl.countDown();
             }
         };
         t.start();
-Log.v(TAG, "GRAAL THREAD STARTED");
+Log.v(TAG, "GRAAL THREAD STARTED now");
 // cl.await(10, TimeUnit.SECONDS);
  } catch (Throwable t) {
  t.printStackTrace();
