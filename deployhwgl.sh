@@ -20,7 +20,7 @@ mkdir -p graalobj
 echo "Compile helper files"
 $compiler -target $platform -c -o graalobj/StrictMath.o  src/native/StrictMath.c 
 $compiler -target $platform -c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -o graalobj/graallauncher.o  src/native/graallauncher.c 
-$compiler -target $platform -Werror -c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -o graalobj/glass_android.o  src/native/glass_android.c 
+$compiler -target $platform -Wall -Werror -Werror=pointer-to-int-cast -Werror=int-to-pointer-cast -Werror=shorten-64-to-32 -c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -o graalobj/glass_android.o  src/native/glass_android.c 
 
 echo "Create shared library including graal-compiled object file"
 $compiler -target $platform -fPIC -Wl,--gc-sections -o lib/arm64-v8a/libmygraal.so  -Lbinariesfornow \

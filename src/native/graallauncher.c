@@ -28,14 +28,16 @@ static const char *tag = "myapp";
 
 JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_startGraalApp
 (JNIEnv *env, jobject activity) {
-    LOGE(stderr, "Start GraalApp!\n");
+    LOGE(stderr, "Start GraalApp, env at %p pointing to %p\n", env, *env);
+int ev = (*env)->GetVersion(env);
+LOGE(stderr, "EV = %d\n", ev);
     start_logger("GraalCompiled");
     (*IsolateEnterStub__JavaMainWrapper__run__5087f5482cc9a6abc971913ece43acb471d2631b__a61fe6c26e84dd4037e4629852b5488bfcc16e7e)(1);
 }
 
 JNIEXPORT void JNICALL Java_com_gluonhq_helloandroid_MainActivity_nativeSetSurface
 (JNIEnv *env, jobject activity, jobject surface) {
-    LOGE(stderr, "nativeSetSurface called, surface at %p\n", surface);
+    LOGE(stderr, "nativeSetSurface called, env at %p and size %ld, surface at %p\n", env, sizeof(JNIEnv), surface);
     window = ANativeWindow_fromSurface(env, surface);
     LOGE(stderr, "native setSurface Ready, native window at %p\n", window);
 }
