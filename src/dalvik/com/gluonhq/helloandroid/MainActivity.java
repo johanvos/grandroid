@@ -75,10 +75,11 @@ try {
         Thread t = new Thread() {
             @Override public void run() {
                 try {
-// Thread.sleep(3000);
 Log.v(TAG, "really START GRAALAPP");
                       startGraalApp();
-Log.v(TAG, "really STARTED GRAALAPP");
+Log.v(TAG, "really STARTED GRAALAPP, wait 3 s");
+Thread.sleep(3000);
+Log.v(TAG, "really STARTED GRAALAPP, waited 3s");
 // startNativeRendering(0);
 cl.countDown();
                 } catch (Throwable t) {

@@ -4,9 +4,10 @@
 #include <stdlib.h>
 
 #include <EGL/egl.h>
+#include <GLES/gl.h>
 #include "glass.h"
 
-// comment this out to see it work (at least the first invocation of eglMakeCurrent
+// comment this out to see it fails (at least the first invocation of eglMakeCurrent
 #define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
@@ -17,42 +18,29 @@ EGLConfig myEglConfig;
 
 #define asPtr(x) ((void *) (unsigned long) (x))
 #define asJLong(x) ((jlong) (unsigned long) (x))
+EGLenum API = 0x30A0;
+void makeGreen () ;
 
 
 JNIEXPORT jlong JNICALL Java_hello_HelloWorld__1getNativeHandle
-  (JNIEnv *env, jobject obj) {
+  (JNIEnv *jenv, jobject obj) {
     return (jlong)getNativeWindow();
 }
 
-JNIEXPORT jlong JNICALL Java_hello_EGL_eglGetDisplay
-    (JNIEnv *env, jclass clazz, jlong display) {
-    LOGE(stderr, "[GLASS] getDisplay, dislay = %ld or %p, env at %p\n", display, (void *)display, env);
-    EGLDisplay eglDisplay = eglGetDisplay(((EGLNativeDisplayType) (unsigned long)(display)));
-    LOGE(stderr, "[GLASS] getDisplay, got display = %ld or %p at address %p\n", (long)eglDisplay, eglDisplay, &eglDisplay);
-LOGE(stderr, "before assign, m = %p and e = %p and ma = %p, me = %p\n",myEglDisplay, eglDisplay, &myEglDisplay, &eglDisplay); 
-    myEglDisplay = eglDisplay;
-LOGE(stderr, "after assign, m = %p and e = %p and ma = %p, me = %p\n",myEglDisplay, eglDisplay, &myEglDisplay, &eglDisplay); 
-    return asJLong(eglDisplay);
-}
-
-JNIEXPORT jboolean JNICALL Java_hello_EGL_eglInitialize
-    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr) {
-    EGLDisplay eglDisplay = asPtr(eglDisplayPtr);
-    LOGE(stderr, "[GLASS] eglInitialize, egldislay = %ld or %p, address at %p\n", eglDisplayPtr, eglDisplay, &eglDisplay);
-
+JNIEXPORT jlong JNICALL Java_hello_EGL_eglGetAndInitializeDisplay
+    (JNIEnv *jenv, jclass clazz, jlong display) {
+    myEglDisplay = eglGetDisplay(((EGLNativeDisplayType) (unsigned long)(display)));
+    LOGE(stderr, "[GLERR] display at %p with value %p, err after eglGetDisplay?  %d\n",&myEglDisplay, myEglDisplay, eglGetError());
     EGLint major, minor;
-    if (eglInitialize(eglDisplay, &major, &minor)) {
-        return JNI_TRUE;
-    } else {
-        LOGE(stderr, "[GLASS] major issue! eglInitialize failed!!!\n\n\n");
-        return JNI_FALSE;
+    if (eglInitialize(myEglDisplay, &major, &minor)) {
+        LOGE(stderr, "[GLERR] after eglInitialize, major = %d and minor = %d, err after eglGetDisplay?  %d\n",major, minor, eglGetError());
+        if (eglBindAPI(API)) {
+        LOGE(stderr, "[GLERR] after err after bindAPI to %d?  %d\n",API, eglGetError());
+            return asJLong(myEglDisplay);
+        }
     }
-}
-
-JNIEXPORT jboolean JNICALL Java_hello_EGL_eglBindAPI
-    (JNIEnv *env, jclass clazz, jint api) {
-    // if (eglBindAPI(api)) {
-    return JNI_TRUE;
+    LOGE(stderr, "[GLERR] major error in getAndInitializeDisplay, return -1");
+    return asJLong(EGL_NO_DISPLAY);
 }
 
 int setEGLAttrs(int *eglAttrs) {
@@ -76,14 +64,15 @@ int setEGLAttrs(int *eglAttrs) {
 }
 
 
-JNIEXPORT jboolean JNICALL Java_hello_EGL_eglChooseConfig
-    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jintArray attribs,
-     jlongArray configs, jint configSize, jintArray numConfigs) {
-    LOGE(stderr, "[GLASS] eglChooseConfig, env at %p, configSize = %d, edlDisplayPtr = %p at %p\n", env, configSize, asPtr(eglDisplayPtr), &eglDisplayPtr);
-    EGLDisplay eglDisplay = asPtr(eglDisplayPtr);
-    int i=0;
+JNIEXPORT jboolean JNICALL Java_hello_EGL_eglChooseConfig (JNIEnv *jenv, jclass clazz) {
+    // (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jintArray attribs,
+     // jlongArray configs, jint configSize, jintArray numConfigs) {
+    // LOGE(stderr, "[GLASS] eglChooseConfig, env at %p, configSize = %d, edlDisplayPtr = %p at %p\n", env, configSize, asPtr(eglDisplayPtr), &eglDisplayPtr);
+    // EGLDisplay eglDisplay = asPtr(eglDisplayPtr);
+    // int i=0;
 
     int eglAttrs[50]; // value, attr pair plus a None
+EGLint configSize = 1;
 
     setEGLAttrs(eglAttrs);
     EGLConfig *configArray = malloc(sizeof(EGLConfig) * configSize);
@@ -91,17 +80,19 @@ JNIEXPORT jboolean JNICALL Java_hello_EGL_eglChooseConfig
     EGLint numConfigPtr=0;
     jboolean retval;
 
-    if (!eglChooseConfig(eglDisplay, eglAttrs, configArray, configSize,
+    if (!eglChooseConfig(myEglDisplay, eglAttrs, configArray, configSize,
                                &numConfigPtr)) {
         retval = JNI_FALSE;
     } else {
         retval = JNI_TRUE;
+/*
         (*env)->SetIntArrayRegion(env, numConfigs, 0, 1, &numConfigPtr);
         for (i = 0; i < numConfigPtr; i++) {
             longConfigArray[i] = asJLong(configArray[i]);
         }
 
         (*env)->SetLongArrayRegion(env, configs, 0, configSize, longConfigArray);
+*/
     }
 myEglConfig = configArray[0];
 LOGE(stderr, "myEglConfig = %p at address %p\n", myEglConfig, &myEglConfig);
@@ -111,18 +102,20 @@ LOGE(stderr, "GLERR after config?  %d\n",eglGetError());
     return retval;
 }
 
+jint once = 0;
+
 JNIEXPORT jlong JNICALL Java_hello_EGL__1eglCreateWindowSurface
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
      jlong nativeWindow) {
 
      LOGE(stderr, "[JNIEGL] createWindowSurface, env at %p, nativewindow at %lx\n", env, nativeWindow);
-#ifdef ALL_NATIVE
+// #ifdef ALL_NATIVE
 EGLDisplay eglDisplay = myEglDisplay;
 EGLConfig eglConfig = myEglConfig;
-#else
-EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
-EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
-#endif
+// #else
+// EGLDisplay eglDisplay = (EGLDisplay)eglDisplayPtr;
+// EGLConfig eglConfig = (EGLConfig)eglConfigPtr;
+// #endif
 LOGE(stderr, "[JNIEGL] provided display at %p and provided config at %p with addresses %p and %p\n", eglDisplay, eglConfig, &eglDisplay, &eglConfig);
     EGLSurface eglSurface;
 
@@ -132,8 +125,10 @@ LOGE(stderr, "[JNIEGL] provided display at %p and provided config at %p with add
     LOGE(stderr, "EGL Surface create at %p, errorcode is %d \n", eglSurface, eglGetError());
     myEglSurface = eglSurface;
 #ifdef ALL_NATIVE
-    LOGE(stderr, "BYPASS MODUS! eglCreateSurface done, now go to eglCreateContext");
+    LOGE(stderr, "BYPASS MODUS 1! eglCreateSurface done, now go to eglCreateContext");
 Java_hello_EGL_eglCreateContext(env, clazz, eglDisplayPtr, eglConfigPtr);
+LOGE(stderr, "EGLCREATEwindowSurface will now return\n");
+once = 1;
 #endif
     return asJLong(eglSurface);
 }
@@ -141,6 +136,10 @@ Java_hello_EGL_eglCreateContext(env, clazz, eglDisplayPtr, eglConfigPtr);
 JNIEXPORT jlong JNICALL Java_hello_EGL_eglCreateContext
     (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr) {
 
+if (once == 1) {
+LOGE(stderr, "DON't CREATE CONTEXT\n");
+ return asJLong(myEglContext);
+}
     LOGE(stderr, "eglCreateContext with env %p\n", env);
 #ifdef ALL_NATIVE
     EGLDisplay eglDisplay = myEglDisplay;
@@ -170,6 +169,9 @@ JNIEXPORT jlong JNICALL Java_hello_EGL_eglCreateContext
 JNIEXPORT jboolean JNICALL Java_hello_EGL_eglMakeCurrent
    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong drawSurfacePtr,
     jlong readSurfacePtr, jlong eglContextPtr) {
+if (once == 1) {
+ return asJLong(myEglContext);
+}
     LOGE(stderr, "eglMakeCurrent with env %p\n", env);
 #ifdef ALL_NATIVE
     EGLDisplay eglDisplay = myEglDisplay;
@@ -189,10 +191,20 @@ JNIEXPORT jboolean JNICALL Java_hello_EGL_eglMakeCurrent
 
     // if (eglMakeCurrent(eglDisplay, eglDrawSurface, eglReadSurface, eglContext)) {
     if (eglMakeCurrent(myEglDisplay, eglDrawSurface, eglReadSurface, eglContext)) {
-        LOGE(stderr, "EGLMAKECURRENT SUCCEEDED\n");
+        LOGE(stderr, "EGLMAKECURRENT SUCCEEDED, show a green area\n");
+        makeGreen();
         return JNI_TRUE;
     } else {
         LOGE(stderr, "eglMakeCurrent failed\n");
         return JNI_FALSE;
     }
+}
+
+void makeGreen () {
+    glClearColor(0.0f, 1.0f, 0.0f, 1.0f); // Set background color to black and opaque
+    glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer
+
+    glFlush();  // Render now
+    LOGE(stderr, "make green, swapBuffers disp = %p and surf = %p\n", myEglDisplay, myEglSurface);
+    eglSwapBuffers(myEglDisplay, myEglSurface);
 }
