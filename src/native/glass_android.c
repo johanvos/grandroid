@@ -8,9 +8,10 @@
 #include "glass.h"
 
 // comment this out to see it fails (at least the first invocation of eglMakeCurrent
-#define ALL_NATIVE 1
+// #define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
+ANativeWindow* myNativeWindow;
 EGLSurface myEglSurface;
 EGLContext myEglContext;
 EGLDisplay myEglDisplay;
@@ -24,7 +25,9 @@ void makeGreen () ;
 
 JNIEXPORT jlong JNICALL Java_hello_HelloWorld__1getNativeHandle
   (JNIEnv *jenv, jobject obj) {
-    return (jlong)getNativeWindow();
+    myNativeWindow = getNativeWindow();
+    return asJLong(myNativeWindow);
+    // return (jlong)getNativeWindow();
 }
 
 JNIEXPORT jlong JNICALL Java_hello_EGL_eglGetAndInitializeDisplay
@@ -104,11 +107,10 @@ LOGE(stderr, "GLERR after config?  %d\n",eglGetError());
 
 jint once = 0;
 
-JNIEXPORT jlong JNICALL Java_hello_EGL__1eglCreateWindowSurface
-    (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr,
-     jlong nativeWindow) {
+JNIEXPORT jlong JNICALL Java_hello_EGL__1eglCreateWindowSurface (JNIEnv* env, jclass clazz) {
+    // (JNIEnv *env, jclass clazz, jlong eglDisplayPtr, jlong eglConfigPtr, jlong nativeWindow) {
 
-     LOGE(stderr, "[JNIEGL] createWindowSurface, env at %p, nativewindow at %lx\n", env, nativeWindow);
+     LOGE(stderr, "[JNIEGL] createWindowSurface, env at %p, nativewindow at %p\n", env, myNativeWindow);
 // #ifdef ALL_NATIVE
 EGLDisplay eglDisplay = myEglDisplay;
 EGLConfig eglConfig = myEglConfig;
@@ -120,13 +122,13 @@ LOGE(stderr, "[JNIEGL] provided display at %p and provided config at %p with add
     EGLSurface eglSurface;
 
     eglSurface =  eglCreateWindowSurface(eglDisplay, eglConfig,
-                                         (EGLNativeWindowType) nativeWindow,
+                                         (EGLNativeWindowType) myNativeWindow,
                                          (EGLint *) NULL);
     LOGE(stderr, "EGL Surface create at %p, errorcode is %d \n", eglSurface, eglGetError());
     myEglSurface = eglSurface;
 #ifdef ALL_NATIVE
     LOGE(stderr, "BYPASS MODUS 1! eglCreateSurface done, now go to eglCreateContext");
-Java_hello_EGL_eglCreateContext(env, clazz, eglDisplayPtr, eglConfigPtr);
+Java_hello_EGL_eglCreateContext(env, clazz, asJLong(myEglDisplay), asJLong(myEglConfig));
 LOGE(stderr, "EGLCREATEwindowSurface will now return\n");
 once = 1;
 #endif
