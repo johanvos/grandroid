@@ -8,7 +8,7 @@
 #include "glass.h"
 
 // comment this out to see it fails (at least the first invocation of eglMakeCurrent
-#define ALL_NATIVE 1
+// #define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
 ANativeWindow* myNativeWindow;
