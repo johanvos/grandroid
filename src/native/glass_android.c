@@ -8,7 +8,7 @@
 #include "glass.h"
 
 // comment this out to see it fails (at least the first invocation of eglMakeCurrent
-// #define ALL_NATIVE 1
+#define ALL_NATIVE 1
 
 ANativeWindow* getNativeWindow();
 ANativeWindow* myNativeWindow;
@@ -121,8 +121,6 @@ LOGE(stderr, "DON't CREATE CONTEXT\n");
     EGLConfig eglConfig = myEglConfig;
 
     LOGE(stderr, "EGLcretecontext, egldisplay at %p and config %p\n", eglDisplay, eglConfig);
-    // we don't support any passed-in context attributes presently
-    // we don't support any share context presently
     EGLint contextAttrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
     EGLContext context = eglCreateContext(eglDisplay, eglConfig,
                                           NULL, contextAttrs);
@@ -132,35 +130,20 @@ LOGE(stderr, "DON't CREATE CONTEXT\n");
     myEglContext = context;
 #ifdef ALL_NATIVE
     LOGE(stderr, "BYPASS MODUS! eglCreateContext done, now go to eglMakeCurrent");
-    Java_hello_EGL_eglMakeCurrent(env, clazz, asJLong(myEglDisplay), asJLong(myEglSurface), asJLong(myEglSurface), asJLong(context));
+    Java_hello_EGL_eglMakeCurrent(env, clazz); // , asJLong(myEglDisplay), asJLong(myEglSurface), asJLong(myEglSurface), asJLong(context));
 #endif
     return asJLong(context);
 }
 
 JNIEXPORT jboolean JNICALL Java_hello_EGL_eglMakeCurrent
-   (JNIEnv *env, jclass clazz  , jlong eglDisplayPtr, jlong drawSurfacePtr, jlong readSurfacePtr, jlong eglContextPtr) {
+   (JNIEnv *env, jclass clazz) { //  , jlong eglDisplayPtr, jlong drawSurfacePtr, jlong readSurfacePtr, jlong eglContextPtr) {
 if (once == 1) {
  return asJLong(myEglContext);
 }
     LOGE(stderr, "eglMakeCurrent with env %p\n", env);
-// #ifdef ALL_NATIVE
-    EGLDisplay eglDisplay = myEglDisplay;
-    EGLSurface eglDrawSurface = myEglSurface;
-    EGLSurface eglReadSurface = myEglSurface;
-    EGLContext eglContext = myEglContext;
-// #else 
-    // EGLDisplay eglDisplay = asPtr(eglDisplayPtr);
-    // EGLSurface eglDrawSurface = asPtr(drawSurfacePtr);
-    // EGLSurface eglReadSurface = asPtr(readSurfacePtr);
-    // EGLContext eglContext = asPtr(eglContextPtr);
-// #endif
-    LOGE(stderr, "EGL MakeCurrent! disp = %p, surface = %p, readS = %p, context = %p\n", eglDisplay, eglDrawSurface, eglReadSurface, eglContext);
-    LOGE(stderr, "EGL MakeCurrent! adddisp = %p, addsurface = %p, addreadS = %p, addcontext = %p\n", &eglDisplay, &eglDrawSurface, &eglReadSurface, &eglContext);
     LOGE(stderr, "GLERR?  %d\n",eglGetError());
 
-
-    // if (eglMakeCurrent(eglDisplay, eglDrawSurface, eglReadSurface, eglContext)) {
-    if (eglMakeCurrent(myEglDisplay, eglDrawSurface, eglReadSurface, eglContext)) {
+    if (eglMakeCurrent(myEglDisplay, myEglSurface, myEglSurface, myEglContext)) {
         LOGE(stderr, "EGLMAKECURRENT SUCCEEDED, show a green area\n");
         makeGreen();
         return JNI_TRUE;
