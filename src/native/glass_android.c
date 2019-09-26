@@ -2,6 +2,7 @@
 #include <android/native_window_jni.h>
 #include "grandroid.h"
 #include <stdlib.h>
+#include <dlfcn.h>
 
 #include <EGL/egl.h>
 #include <GLES/gl.h>
@@ -21,6 +22,7 @@ EGLConfig myEglConfig;
 #define asJLong(x) ((jlong) (unsigned long) (x))
 EGLenum API = 0x30A0;
 void makeGreen () ;
+jboolean doEglChooseConfig();
 
 
 JNIEXPORT jlong JNICALL Java_hello_HelloWorld__1getNativeHandle
@@ -34,10 +36,15 @@ JNIEXPORT jlong JNICALL Java_hello_EGL_eglGetAndInitializeDisplay
     myEglDisplay = eglGetDisplay(((EGLNativeDisplayType) (unsigned long)(display)));
     LOGE(stderr, "[GLERR] display at %p with value %p, err after eglGetDisplay?  %d\n",&myEglDisplay, myEglDisplay, eglGetError());
     EGLint major, minor;
+void* fn = eglMakeCurrent;
+LOGE(stderr, "emc1 = %p\n", fn);
+void* fn2 = eglInitialize;
+LOGE(stderr, "emc2 = %p\n", fn2);
     if (eglInitialize(myEglDisplay, &major, &minor)) {
         LOGE(stderr, "[GLERR] after eglInitialize, major = %d and minor = %d, err after eglGetDisplay?  %d\n",major, minor, eglGetError());
         if (eglBindAPI(API)) {
         LOGE(stderr, "[GLERR] after err after bindAPI to %d?  %d\n",API, eglGetError());
+            doEglChooseConfig();
             return asJLong(myEglDisplay);
         }
     }
@@ -65,8 +72,7 @@ int setEGLAttrs(int *eglAttrs) {
     return index;
 }
 
-
-JNIEXPORT jboolean JNICALL Java_hello_EGL_eglChooseConfig (JNIEnv *jenv, jclass clazz) {
+jboolean doEglChooseConfig() {
     int eglAttrs[50]; 
     EGLint configSize = 1;
 
@@ -116,23 +122,18 @@ if (once == 1) {
 LOGE(stderr, "DON't CREATE CONTEXT\n");
  return asJLong(myEglContext);
 }
-    LOGE(stderr, "eglCreateContext with env %p\n", env);
-    EGLDisplay eglDisplay = myEglDisplay;
-    EGLConfig eglConfig = myEglConfig;
-
-    LOGE(stderr, "EGLcretecontext, egldisplay at %p and config %p\n", eglDisplay, eglConfig);
+    LOGE(stderr, "eglCreatecontext, env = %p, egldisplay at %p and config %p\n", env, myEglDisplay, myEglConfig);
     EGLint contextAttrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-    EGLContext context = eglCreateContext(eglDisplay, eglConfig,
+    myEglContext = eglCreateContext(myEglDisplay, myEglConfig,
                                           NULL, contextAttrs);
-    LOGE(stderr, "eglContext created at %p\n", context);
+    LOGE(stderr, "eglContext created at %p\n", myEglContext);
     LOGE(stderr, "GLERR?  %d\n",eglGetError());
 
-    myEglContext = context;
 #ifdef ALL_NATIVE
     LOGE(stderr, "BYPASS MODUS! eglCreateContext done, now go to eglMakeCurrent");
     Java_hello_EGL_eglMakeCurrent(env, clazz); // , asJLong(myEglDisplay), asJLong(myEglSurface), asJLong(myEglSurface), asJLong(context));
 #endif
-    return asJLong(context);
+    return asJLong(myEglContext);
 }
 
 JNIEXPORT jboolean JNICALL Java_hello_EGL_eglMakeCurrent
@@ -142,6 +143,11 @@ if (once == 1) {
 }
     LOGE(stderr, "eglMakeCurrent with env %p\n", env);
     LOGE(stderr, "GLERR?  %d\n",eglGetError());
+void* fn = eglMakeCurrent;
+LOGE(stderr, "emc = %p\n", fn);
+void *lib = dlopen("libEGL.so", RTLD_LAZY|RTLD_GLOBAL);
+void* valdis = dlsym(lib, "validate_display");
+LOGE(stderr, "valdis = %p\n", valdis);
 
     if (eglMakeCurrent(myEglDisplay, myEglSurface, myEglSurface, myEglContext)) {
         LOGE(stderr, "EGLMAKECURRENT SUCCEEDED, show a green area\n");
