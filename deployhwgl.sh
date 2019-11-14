@@ -25,7 +25,7 @@ $compiler -target $platform -Wall -Werror -Werror=pointer-to-int-cast -Werror=in
 echo "Create shared library including graal-compiled object file"
 $compiler -target $platform -fPIC -Wl,--gc-sections -o lib/arm64-v8a/libmygraal.so  -Lbinariesfornow \
   -landroid -llog -lz -lstrictmath -lGLESv2 -lEGL -shared  \
-  binariesfornow/hello.helloworld.o graalobj/StrictMath.o graalobj/graallauncher.o graalobj/glass_android.o
+  -Wl,--whole-archive binariesfornow/hello.helloworld.o binariesfornow/llvm.o -Wl,--no-whole-archive graalobj/StrictMath.o graalobj/graallauncher.o graalobj/glass_android.o
 cp binariesfornow/libstrictmath.so lib/arm64-v8a
 
 echo "Compile Dalvik Activity with old Java compiler"

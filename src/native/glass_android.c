@@ -31,6 +31,28 @@ JNIEXPORT jlong JNICALL Java_hello_HelloWorld__1getNativeHandle
     return asJLong(myNativeWindow);
 }
 
+JNIEXPORT jlong JNICALL Java_hello_EGL_eglGetDisplay
+    (JNIEnv *env, jclass clazz, jlong display) {
+    LOGE(stderr, "[LGE] getDisplay for %ld\n", display);
+    myEglDisplay = eglGetDisplay(((EGLNativeDisplayType) (unsigned long)(display)));
+    return asJLong(myEglDisplay);
+}
+
+JNIEXPORT jboolean JNICALL Java_hello_EGL_eglInitialize
+    (JNIEnv *env, jclass clazz, jlong eglDisplay, jintArray majorArray,
+     jintArray minorArray){
+
+    EGLint major, minor;
+    if (eglInitialize(asPtr(eglDisplay), &major, &minor)) {
+         (*env)->SetIntArrayRegion(env, majorArray, 0, 1, &major);
+         (*env)->SetIntArrayRegion(env, minorArray, 0, 1, &minor);
+        return JNI_TRUE;
+    } else {
+        return JNI_FALSE;
+    }
+}
+
+
 JNIEXPORT jlong JNICALL Java_hello_EGL_eglGetAndInitializeDisplay
     (JNIEnv *jenv, jclass clazz, jlong display) {
     myEglDisplay = eglGetDisplay(((EGLNativeDisplayType) (unsigned long)(display)));
@@ -89,11 +111,44 @@ jboolean doEglChooseConfig() {
         retval = JNI_TRUE;
     }
     myEglConfig = configArray[0];
-    LOGE(stderr, "myEglConfig = %p at address %p\n", myEglConfig, &myEglConfig);
+    LOGE(stderr, "created myEglConfig = %p at address %p\n", myEglConfig, &myEglConfig);
     free(configArray);
     free(longConfigArray);
     LOGE(stderr, "GLERR after config?  %d\n",eglGetError());
     return retval;
+}
+
+JNIEXPORT jboolean JNICALL Java_hello_EGL_eglChooseConfig
+    (JNIEnv *env, jclass clazz, jlong eglDisplay, jintArray attribs,
+     jlongArray configs, jint configSize, jintArray numConfigs) {
+    doEglChooseConfig();
+    int eglAttrs[50]; 
+
+    setEGLAttrs(eglAttrs);
+
+    EGLConfig *configArray = malloc(sizeof(EGLConfig) * configSize);
+    jlong *longConfigArray = malloc(sizeof(long) * configSize);
+    EGLint numConfigPtr=0;
+    jboolean retval;
+int i = 0;
+
+    if (!eglChooseConfig(asPtr(eglDisplay), eglAttrs, configArray, configSize,
+                               &numConfigPtr)) {
+        retval = JNI_FALSE;
+    } else {
+        retval = JNI_TRUE;
+        (*env)->SetIntArrayRegion(env, numConfigs, 0, 1, &numConfigPtr);
+        for (i = 0; i < numConfigPtr; i++) {
+            longConfigArray[i] = asJLong(configArray[i]);
+        }
+
+        (*env)->SetLongArrayRegion(env, configs, 0, configSize, longConfigArray);
+    }
+    free(configArray);
+    free(longConfigArray);
+LOGE(stderr, "That was the full eglChooseConfig\n");
+    return retval;
+
 }
 
 jint once = 0;

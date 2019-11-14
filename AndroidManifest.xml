@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <manifest xmlns:a='http://schemas.android.com/apk/res/android' package='com.gluonhq.helloandroid' a:versionCode='1' a:versionName='1.0'>
     <supports-screens a:xlargeScreens="true"/>
-    <uses-sdk a:minSdkVersion="21" a:targetSdkVersion="27"/>
+    <uses-sdk a:minSdkVersion="21" a:targetSdkVersion="25"/>
     <application a:label='A HelloGraal'>
         <activity a:name='com.gluonhq.helloandroid.MainActivity'>
              <intent-filter>
